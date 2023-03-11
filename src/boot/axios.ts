@@ -1,0 +1,8 @@
+import axios from 'axios';
+
+const token = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJiZHUuZnN0ZWMucnUiLCJhdWQiOnsiMCI6ImFwaVJlYWRPbmx5IiwiMiI6ImFwaV9nZXQifSwiZXhwIjoxNjc4NTc0NDY2LCJpZCI6IjQ3IiwianRpIjoiNzA2MjY2ZmE0MDk3YTA4ZTlhNjFjYjFiNmM3YmRlMDE5MzgxZWUzMWRjNjFjOTI3MTVlOTlhNjk5NjE3MzVkMDg2N2RmYTllNmVhOGUwY2VjZTIxMTlhM2Y1MGFiNjdkZTFhZDU2Yjg1ODg5NmRkMTM3ZWExMGI3YzJlNTMyMTUiLCJpYXQiOjE2Nzg1NzI2NjZ9.bfQEq2wew9h8iiBJpCZCZGbcllyx6EMT-XImBggia2nYErDvGU3ypOgM6AGl2W7bNSqE1laDZk1icxA7u_2kJQ'
+export default axios.create({
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+});
