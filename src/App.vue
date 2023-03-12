@@ -1,15 +1,16 @@
-// Поправить баг с поиском
-// Добавить чтение из URL после обновления
-// Переписать параматеры запроса как объект
-// Переписать пагинация на тс
-// Поправить сброс токена
-
 <template>
   <div class="app">
-    <filters-field v-model:limit="limit" v-model:model-value="search"/>
+    <filters-field
+      v-model:limit="limit"
+      v-model:model-value="search"
+      v-model:date-start="dateStart"
+      v-model:date-end="dateEnd"/>
     <div>
       <vulnerability-list :vulnerabilities="vulnerabilities"/>
-      <vulnerability-pagination v-model="page" :total-page="totalPage" :page="page"/>
+      <vulnerability-pagination
+        v-model="page"
+        :total-page="totalPage"
+        :page="page"/>
     </div>
   </div>
 </template>
@@ -20,7 +21,7 @@ import {defineComponent} from 'vue';
 import FiltersField from 'components/filters-field.vue';
 import VulnerabilityItem from 'components/vulnerability-item.vue';
 import VulnerabilityList from 'components/vulnerability-list.vue';
-import api from 'boot/axios';
+import {api} from 'boot/axios';
 import {IVulnerability, Response,} from 'src/models';
 import axios from 'axios';
 import VulnerabilityPagination from 'components/vulnerability-pagination.vue';
@@ -35,6 +36,8 @@ export default defineComponent({
       limit: '10',
       page: 1,
       totalPage: 0,
+      dateStart: '',
+      dateEnd: '',
     }
   },
   watch: {
@@ -46,47 +49,64 @@ export default defineComponent({
       this.saveToUrl()
       this.getAllVulnerability()
     },
-    page(){
+    page() {
       this.saveToUrl()
+      this.getAllVulnerability()
+    },
+    dateStart() {
+      this.getAllVulnerability()
+    },
+    dateEnd() {
       this.getAllVulnerability()
     }
   },
   created() {
-    const windowData = Object.fromEntries(
-      new URL(window?.location as any).searchParams.entries()
-    )
-    const VALID_KEYS = ['search', 'limit','page'];
-
-    VALID_KEYS.forEach(key => {
-      if (windowData[key]) {
-        this[key] = windowData[key];
-      }
-    });
-
+    this.getParamsDataFromUrl()
   },
   methods: {
     async getAllVulnerability() {
-      const response = await api.get<Response>(`api/Vuls?filter[vul_name]=~${this.search}&page[limit]=${this.limit}&page[offset]=${this.page}`)
+      const response = await api.get<Response>(`api/Vuls`, {
+          params: {
+            'page[limit]': this.limit,
+            'page[offset]': this.page,
+            'filter[vul_name]': `~${this.search}`,
+            'filter[vul_datv]': `<${this.dateEnd}`,
+          }
+        }
+      )
       const {data, meta} = response.data
       this.vulnerabilities = data
 
       const {limit, count} = meta
       this.totalPage = Math.ceil(count / limit)
       console.log(this.vulnerabilities)
+
       // const resp = axios.post('api/auth',{
       //   "username":"api-demo",
       //   "password":"api-demo"
       // })
       // console.log(resp)
     },
+
     saveToUrl() {
       window.history.pushState(null, document.title, `${window.location.pathname}?search=${this.search}&limit=${this.limit}&page=${this.page}`)
     },
+    getParamsDataFromUrl() {
+      const windowData = Object.fromEntries(
+        new URL(window?.location as any).searchParams.entries()
+      )
+      const VALID_KEYS = ['search', 'limit', 'page'];
+
+      VALID_KEYS.forEach(key => {
+        if (windowData[key]) {
+          this[key] = windowData[key];
+        }
+      });
+    }
   },
   async mounted() {
     await this.getAllVulnerability()
   },
-
 });
 </script>
 
@@ -100,11 +120,9 @@ p {
 }
 
 .app {
-  width: 1250px;
+  width: 1300px;
   margin: 50px auto;
   display: flex;
   justify-content: space-between;
-
 }
-
 </style>
