@@ -2,16 +2,14 @@
   <div class="filters_field">
     <p class="title">Фильтрация</p>
     <p class="filter_title">Контекстный поиск по названию уязвимости</p>
-    <q-input class="filters_search" @update:modelValue="$emit('changeText',searchText)" v-model="searchText" filled
-             type="search">
-      <template v-slot:append>
-        <q-icon name="search"/>
-      </template>
-    </q-input>
+    <input :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
     <p class="filter_title">Дата выявления</p>
     <p class="filter_title">c</p>
     <p class="filter_title">Выводить по
-      <q-btn round :disable="limit === value" @click="$emit('changeLimit',value)" v-for="value in [10,20,50,100]" flat color="primary" :label="value"/>
+      <span :class="{'limitButton':true,'pick':limit === value}" @click="$emit('update:limit',value)"
+            v-for="value in ['10','20','50','100']">
+        {{ value }}
+      </span>
     </p>
   </div>
 </template>
@@ -22,14 +20,13 @@ import {defineComponent} from 'vue';
 export default defineComponent({
   name: '',
   data() {
-    return {
-      searchText: '',
-    }
+
   },
-  props:{
-    limit:Number,
+  props: {
+    limit: String,
+    modelValue: String,
   },
-  emits: ['changeText', 'changeLimit'],
+  emits: ['update:modelValue', 'update:limit']
 })
 </script>
 
@@ -42,6 +39,22 @@ export default defineComponent({
   height: 600px;
   border-radius: 15px;
   background-color: #515151;
+
+  .limitButton {
+    color: #1976D2;
+    cursor: pointer;
+    margin: 0 5px;
+  }
+  .pick{
+    text-decoration: underline;
+  }
+
+  input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: none;
+  }
 
   .title {
     color: #cccccc;
