@@ -4,7 +4,9 @@
       v-model:limit="limit"
       v-model:search="search"
       v-model:date-start="dateStart"
-      v-model:date-end="dateEnd"/>
+      v-model:date-end="dateEnd"
+      @remove-date-filter="removeDateFilters"
+    />
     <div>
       <vulnerability-list :vulnerabilities="vulnerabilities"/>
       <vulnerability-pagination
@@ -53,9 +55,13 @@ export default defineComponent({
       this.getAllVulnerability()
     },
     dateStart() {
+      this.dateEnd = ''
+      this.saveToUrl()
       this.getAllVulnerability()
     },
     dateEnd() {
+      this.dateStart = ''
+      this.saveToUrl()
       this.getAllVulnerability()
     }
   },
@@ -63,7 +69,13 @@ export default defineComponent({
     this.getParamsDataFromUrl()
   },
   async mounted() {
+    this.saveToUrl()
     await this.getAllVulnerability()
+  },
+  computed: {
+    getDataType() {
+      return (this.dateStart === '' ? `<${this.dateEnd}` : `>${this.dateStart}`)
+    }
   },
   methods: {
     async getAllVulnerability() {
@@ -73,7 +85,7 @@ export default defineComponent({
               'page[limit]': this.limit,
               'page[offset]': this.page,
               'filter[vul_name]': `~${this.search}`,
-              'filter[vul_datv]': `<${this.dateEnd}`,
+              'filter[vul_datv]': this.getDataType,
             }
           }
         )
@@ -82,7 +94,7 @@ export default defineComponent({
 
         const {limit, count} = meta
         this.totalPage = Math.ceil(count / limit)
-        } catch (err) {
+      } catch (err) {
         console.log(err)
       }
       //
@@ -93,19 +105,36 @@ export default defineComponent({
       // console.log(resp)
     },
     saveToUrl() {
-      window.history.pushState(null, document.title, `${window.location.pathname}?search=${this.search}&limit=${this.limit}&page=${this.page}`)
+      const isDate = this.dateStart || this.dateEnd ? `&date=${this.getDataType}` : '' // Проверяем,есть ли выбранная дата,если нет то не записываем ёё в параметры url
+      const isSearch = this.search ? `&search=${this.search}` : '' // Аналогично для поиска
+      const url = `${window.location.pathname}?&limit=${this.limit}&page=${this.page}${isDate}${isSearch}`;
+      window.history.pushState(null, document.title, url)
     },
     getParamsDataFromUrl() {
       const windowData = Object.fromEntries(
         new URL(window?.location as any).searchParams.entries()
       )
-      const VALID_KEYS = ['search', 'limit', 'page'];
+      const VALID_KEYS = ['search', 'limit', 'page', 'date'];
 
+      // Записываем в стейт данные из урла
       VALID_KEYS.forEach(key => {
         if (windowData[key]) {
+          if (key === 'date') {
+            // Так как в зависимости от типа выбранной даты нужно будет записывать в разные поля data,то делаем проверку и записываем в нужное поле
+            const dateType = windowData[key][0] === '>' ? 'dateStart' : 'dateEnd';
+            this[dateType] = windowData[key].substring(1, windowData[key].length)
+            return
+          }
           this[key] = windowData[key];
         }
       });
+    },
+    removeDateFilters() {
+      if (this.dateStart) {
+        this.dateStart = ''
+        return
+      }
+      this.dateStart = ''
     }
   },
 });
@@ -115,9 +144,11 @@ export default defineComponent({
 body {
   background-color: #ebebeb;
 }
+
 p {
   background-color: transparent;
 }
+
 .app {
   width: 1300px;
   margin: 50px auto;
