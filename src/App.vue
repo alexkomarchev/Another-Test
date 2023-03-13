@@ -2,7 +2,7 @@
   <div class="app">
     <filters-field
       v-model:limit="limit"
-      v-model:model-value="search"
+      v-model:search="search"
       v-model:date-start="dateStart"
       v-model:date-end="dateEnd"/>
     <div>
@@ -16,7 +16,6 @@
 </template>
 
 <script lang="ts">
-
 import {defineComponent} from 'vue';
 import FiltersField from 'components/filters-field.vue';
 import VulnerabilityItem from 'components/vulnerability-item.vue';
@@ -63,31 +62,36 @@ export default defineComponent({
   created() {
     this.getParamsDataFromUrl()
   },
+  async mounted() {
+    await this.getAllVulnerability()
+  },
   methods: {
     async getAllVulnerability() {
-      const response = await api.get<Response>(`api/Vuls`, {
-          params: {
-            'page[limit]': this.limit,
-            'page[offset]': this.page,
-            'filter[vul_name]': `~${this.search}`,
-            'filter[vul_datv]': `<${this.dateEnd}`,
+      try {
+        const response = await api.get<Response>(`api/Vuls`, {
+            params: {
+              'page[limit]': this.limit,
+              'page[offset]': this.page,
+              'filter[vul_name]': `~${this.search}`,
+              'filter[vul_datv]': `<${this.dateEnd}`,
+            }
           }
-        }
-      )
-      const {data, meta} = response.data
-      this.vulnerabilities = data
+        )
+        const {data, meta} = response.data
+        this.vulnerabilities = data
 
-      const {limit, count} = meta
-      this.totalPage = Math.ceil(count / limit)
-      console.log(this.vulnerabilities)
-
+        const {limit, count} = meta
+        this.totalPage = Math.ceil(count / limit)
+        } catch (err) {
+        console.log(err)
+      }
+      //
       // const resp = axios.post('api/auth',{
       //   "username":"api-demo",
       //   "password":"api-demo"
       // })
       // console.log(resp)
     },
-
     saveToUrl() {
       window.history.pushState(null, document.title, `${window.location.pathname}?search=${this.search}&limit=${this.limit}&page=${this.page}`)
     },
@@ -104,9 +108,6 @@ export default defineComponent({
       });
     }
   },
-  async mounted() {
-    await this.getAllVulnerability()
-  },
 });
 </script>
 
@@ -114,11 +115,9 @@ export default defineComponent({
 body {
   background-color: #ebebeb;
 }
-
 p {
   background-color: transparent;
 }
-
 .app {
   width: 1300px;
   margin: 50px auto;

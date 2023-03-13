@@ -2,16 +2,28 @@
   <div class="filters_field">
     <p class="title">Фильтрация</p>
     <p class="filter_title">Контекстный поиск по названию уязвимости</p>
-    <input :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
+
+    <input :value="search"
+           class="input_filters"
+           @input="updateSearch"/>
+
     <p class="filter_title">Дата выявления</p>
     <div class="filters_date">
       <p class="filter_title">c</p>
-      <input class="filters_search" @input="selectDateStart" type="date"/>
+
+      <input class="input_filters input_date"
+             @input="$emit('update:dateStart', $event.target.value)"
+             type="date"/>
       <p class="filter_title">по</p>
-      <input class="filters_search" @input="selectDateEnd" type="date"/>
+
+      <input class="input_filters input_date"
+             @input="$emit('update:dateEnd', $event.target.value)"
+             type="date"/>
     </div>
-    <p class="filter_title">Выводить по
-      <span :class="{'limitButton':true,'pick':limit === value}" @click="$emit('update:limit',value)"
+    <p class=" center">Выводить по
+      <span :class="{'pick':limit === value}"
+            class="limitButton"
+            @click="$emit('update:limit',value)"
             v-for="value in ['10','20','50','100']">
         {{ value }}
       </span>
@@ -20,28 +32,23 @@
 </template>
 
 <script>
+
 import {defineComponent} from 'vue';
-
+import { debounce } from 'vue-debounce'
 export default defineComponent({
-  name: '',
-  data() {
-
-  },
+  name: 'FiltersField',
   props: {
     limit: String,
-    modelValue: String,
+    search: String,
     dateStart: String,
     dateEnd: String,
   },
-  methods: {
-    selectDateStart($event) {
-      this.$emit('update:dateStart', $event.target.value)
-    },
-    selectDateEnd($event) {
-      this.$emit('update:dateEnd', $event.target.value)
+  methods:{
+    updateSearch($event){
+      const dbFn = debounce(() => this.$emit('update:search', $event.target.value),800)
+      dbFn()
     }
-  },
-  emits: ['update:modelValue', 'update:limit', 'update:dateStart', 'update:dateEnd']
+  }
 })
 </script>
 
@@ -61,10 +68,7 @@ export default defineComponent({
     cursor: pointer;
     margin: 0 5px;
   }
-  .filters_search{
-    width: 140px;
-  }
-  .filters_date{
+  .filters_date {
     align-items: center;
     justify-content: space-between;
     display: flex;
@@ -72,12 +76,20 @@ export default defineComponent({
   .pick {
     text-decoration: underline;
   }
-
-  input {
+  .center {
+    color: white;
+    width: 100%;
+    margin: 15px auto;
+  }
+  .input_filters {
     width: 100%;
     padding: 8px 10px;
     border-radius: 10px;
     border: none;
+  }
+
+  .input_date{
+    width: 140px;
   }
 
   .title {
@@ -89,9 +101,8 @@ export default defineComponent({
   .filters_search {
     background-color: white;
   }
-
   .filter_title {
-    margin: 4px 0;
+    margin: 8px 0;
     color: white;
     text-align: left;
   }
